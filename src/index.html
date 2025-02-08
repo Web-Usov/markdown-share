@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/markdown/markdown.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        font-family: "Inter", sans-serif;
+      }
+      .content {
+        display: flex;
+        flex: 1;
+        overflow: auto;
+      }
+      .editor-container,
+      .preview {
+        width: 50%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+      }
+      .editor-container {
+        display: flex;
+        flex-direction: column;
+      }
+      .CodeMirror {
+        height: 100%;
+        font-size: 16px;
+        background: #f5f5f5;
+      }
+      .toolbar {
+        padding: 10px;
+        background: #f0f0f0;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        gap: 10px;
+      }
+      .preview {
+        padding: 20px;
+        background: white;
+      }
+      button {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .short-url {
+        display: none;
+        margin-left: 10px;
+        padding: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      pre {
+        overflow-x: auto;
+        padding: 10px;
+        background: #f0f0f0;
+      }
+      code {
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <div class="editor-container">
+        <textarea id="editor" placeholder="Введите Markdown..."></textarea>
+      </div>
+      <div id="preview" class="preview"></div>
+    </div>
+    <div class="toolbar">
+      <button class="button" id="share">Поделиться</button>
+      <button class="button" id="clear">Стереть</button>
+    </div>
+
+    <script>
+      const editorElement = document.getElementById("editor");
+      const preview = document.getElementById("preview");
+
+      const editor = CodeMirror.fromTextArea(editorElement, {
+        mode: "markdown",
+        lineNumbers: true,
+        theme: "default",
+      });
+
+      let activeElement = null;
+
+      function handlePointerEnter(element) {
+        activeElement = element;
+      }
+
+      function handlePointerLeave() {
+        activeElement = null;
+      }
+
+      // Настраиваем отслеживание указателя для редактора
+      editor.getWrapperElement().addEventListener('pointerenter', () => handlePointerEnter(editor));
+      editor.getWrapperElement().addEventListener('pointerleave', handlePointerLeave);
+
+      // Настраиваем отслеживание указателя для превью
+      preview.addEventListener('pointerenter', () => handlePointerEnter(preview));
+      preview.addEventListener('pointerleave', handlePointerLeave);
+
+      function syncScroll(from, to) {
+        const fromElement = from.getScrollerElement
+          ? from.getScrollerElement()
+          : from;
+        const toElement = to.getScrollerElement ? to.getScrollerElement() : to;
+
+        // Проверяем, что указатель находится над элементом
+        if (activeElement !== from) return;
+
+        const ratio =
+          fromElement.scrollTop /
+          (fromElement.scrollHeight - fromElement.clientHeight);
+        toElement.scrollTop =
+          ratio * (toElement.scrollHeight - toElement.clientHeight);
+      }
+
+      function updateMarkdown() {
+        const markdownText = editor.getValue();
+        try {
+          const encoded = btoa(
+            encodeURIComponent(markdownText).replace(
+              /%([0-9A-F]{2})/g,
+              function toSolidBytes(match, p1) {
+                return String.fromCharCode("0x" + p1);
+              }
+            )
+          );
+          history.replaceState(null, "", `?source=${encoded}`);
+          renderMarkdown(markdownText);
+        } catch (e) {
+          console.error("Ошибка кодирования текста:", e);
+        }
+      }
+
+      function renderMarkdown(text) {
+        preview.innerHTML = marked.parse(text, {
+          highlight: function (code, lang) {
+            return hljs.highlightAuto(code).value;
+          },
+        });
+      }
+
+      function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("source")) {
+          try {
+            const base64 = params.get("source").replace(/ /g, "+");
+            const decoded = decodeURIComponent(
+              atob(base64)
+                .split("")
+                .map(function (c) {
+                  return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+            );
+            editor.setValue(decoded);
+            renderMarkdown(decoded);
+          } catch (e) {
+            console.error("Ошибка декодирования base64:", e);
+            alert(
+              "Ошибка при загрузке данных из URL. Возможно, ссылка повреждена."
+            );
+          }
+        }
+      }
+
+      document.getElementById("share").addEventListener("click", async () => {
+        const currentUrl = window.location.href;
+        
+        try {
+          // Получаем короткую ссылку
+          const response = await fetch('/api/shorten', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: currentUrl })
+          });
+          
+          const data = await response.json();
+          
+          if (data.short_url) {
+            // Показываем короткую ссылку
+            const shortUrlElement = document.createElement('span');
+            shortUrlElement.className = 'short-url';
+            shortUrlElement.textContent = data.short_url;
+            
+            // Удаляем предыдущий элемент с короткой ссылкой, если он есть
+            const existingShortUrl = document.querySelector('.short-url');
+            if (existingShortUrl) {
+              existingShortUrl.remove();
+            }
+            
+            // Добавляем новый элемент после кнопки share
+            const shareButton = document.getElementById('share');
+            shareButton.parentNode.insertBefore(shortUrlElement, shareButton.nextSibling);
+            shortUrlElement.style.display = 'inline-block';
+            
+            // Копируем короткую ссылку в буфер обмена
+            navigator.clipboard.writeText(data.short_url);
+            alert("Короткая ссылка скопирована в буфер обмена!");
+          }
+        } catch (error) {
+          console.error('Ошибка при создании короткой ссылки:', error);
+          alert("Не удалось создать короткую ссылку");
+        }
+      });
+
+      document.getElementById("clear").addEventListener("click", () => {
+        editor.setValue("");
+        updateMarkdown();
+      });
+
+      editor.on("change", updateMarkdown);
+      editor.on("scroll", () => syncScroll(editor, preview));
+      preview.addEventListener("scroll", () => syncScroll(preview, editor));
+      loadFromURL();
+    </script>
+  </body>
+</html>
