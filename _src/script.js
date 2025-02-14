@@ -38,6 +38,8 @@ function syncScroll(from, to) {
   // Проверяем, что указатель находится над элементом
   if (activeElement !== from) return;
 
+
+
   const ratio =
     fromElement.scrollTop /
     (fromElement.scrollHeight - fromElement.clientHeight);

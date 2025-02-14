@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@plugin "daisyui";
+@plugin "@tailwindcss/typography";
+
+/* Дополнительные стили для markdown */
+.prose {
+  max-width: none;
+}
+
+@layer utilities {
+  .prose {
+    & :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
+      content: normal;
+    }
+
+    & :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
+      content: normal;
+    }
+  }
+}
+
+/* Стили для разделителя панелей */
+.split {
+  display: flex;
+}
+
+.split-horizontal {
+  flex-direction: row;
+}
+
+.split-vertical {
+  flex-direction: column;
+}
+
+.gutter {
+  background-color: hsl(var(--b3));
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter:hover {
+  background-color: hsl(var(--p));
+}
+
+.gutter.gutter-horizontal {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+  cursor: row-resize;
+}
