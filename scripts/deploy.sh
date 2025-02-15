@@ -5,16 +5,20 @@ set -a
 source .env
 set +a
 
-# Check if source directory exists
-if [ ! -d "src" ]; then
-    echo "Error: src directory not found!"
+# Check if SSH_DEPLOY is set
+if [ -z "$SSH_DEPLOY" ]; then
+    echo "Error: SSH_DEPLOY is not set!"
     exit 1
 fi
 
-# Create a temporary directory for rsync
-ssh $SSH_URL "mkdir -p $SSH_DIRECTORY"
 
-# Sync all files from src directory to remote server
-rsync -avz --delete ./src/ $SSH_URL:$SSH_DIRECTORY/
+# Check if source directory exists
+if [ ! -d "dist" ]; then
+    echo "Error: dist directory not found!"
+    exit 1
+fi
+
+# Sync all files from dist directory to remote server
+rsync -avz --delete ./dist/ $SSH_DEPLOY/
 
 echo "Deployment completed successfully!"

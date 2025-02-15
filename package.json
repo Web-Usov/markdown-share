@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "pnpm run build && env $(cat .env) bash scripts/deploy.sh"
   },
   "dependencies": {
     "@codemirror/commands": "^6.8.0",
@@ -16,6 +17,7 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.36.2",
+    "@lezer/highlight": "^1.2.1",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.0.6",
     "@tiptap/extension-code-block-lowlight": "^2.11.5",

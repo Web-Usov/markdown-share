@@ -4,19 +4,11 @@ import { useEffect } from "react";
 
 export const Toolbar = () => {
   const { content, setContent, createShortUrl } = useMarkdown();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, asSelectedTheme } = useTheme();
 
   useEffect(() => {
     const handleThemeChange = () => {
-      if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-          ? "dark"
-          : "light";
-        document.documentElement.setAttribute("data-theme", systemTheme);
-      } else {
-        document.documentElement.setAttribute("data-theme", theme);
-      }
+      document.documentElement.setAttribute("data-theme", theme);
     };
 
     handleThemeChange();
@@ -48,9 +40,9 @@ export const Toolbar = () => {
     <div className="flex-none gap-2">
       <div className="dropdown dropdown-end">
         <div tabIndex={0} role="button" className="btn btn-ghost m-1">
-          {theme === "light" && <span>☀️</span>}
-          {theme === "dark" && <span>🌙</span>}
-          {theme === "system" && <span>💻</span>}
+          {asSelectedTheme === "light" && <span>☀️</span>}
+          {asSelectedTheme === "dark" && <span>🌙</span>}
+          {asSelectedTheme === "system" && <span>💻</span>}
         </div>
         <ul
           tabIndex={0}
@@ -75,7 +67,7 @@ export const Toolbar = () => {
           <li>
             <a
               onClick={() => setTheme("system")}
-              className={theme === "system" ? "active" : ""}
+              className={asSelectedTheme === "system" ? "active" : ""}
             >
               Системная 💻
             </a>

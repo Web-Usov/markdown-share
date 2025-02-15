@@ -3,15 +3,16 @@ import { EditorView, keymap } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
-import { oneDark } from "@codemirror/theme-one-dark";
 import { CodeEditorProps } from "./code-editor.types";
-import { CodeEditorBaseTheme } from "./code-editor.theme";
+import { CodeEditorBaseTheme, getEditorTheme } from "./code-editor.theme";
+import { useTheme } from "../../context/ThemeContext";
 
 export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
   ({ value, onChange, className = "", onScroll }, ref) => {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const codeEditorRef = useRef<EditorView>(null);
     const scrollListenerRef = useRef<((e: Event) => void) | null>(null);
+    const { theme } = useTheme();
 
     // Создаем редактор только один раз
     useEffect(() => {
@@ -24,7 +25,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
             markdown(),
             keymap.of([indentWithTab]),
             keymap.of(defaultKeymap),
-            oneDark,
+            getEditorTheme(theme),
             CodeEditorBaseTheme,
             EditorView.updateListener.of((update) => {
               if (update.docChanged) {
@@ -34,6 +35,7 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
             EditorView.lineWrapping,
           ],
         }),
+
         parent: wrapperRef.current,
       });
 
@@ -61,6 +63,30 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
         },
       });
     }, [value]);
+
+    // Обновляем тему при её изменении
+    useEffect(() => {
+      if (!codeEditorRef.current) return;
+
+      const newState = EditorState.create({
+        doc: codeEditorRef.current.state.doc,
+        extensions: [
+          markdown(),
+          keymap.of([indentWithTab]),
+          keymap.of(defaultKeymap),
+          getEditorTheme(theme),
+          CodeEditorBaseTheme,
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              onChange(update.state.doc.toString());
+            }
+          }),
+          EditorView.lineWrapping,
+        ],
+      });
+
+      codeEditorRef.current.setState(newState);
+    }, [theme, onChange]);
 
     // Управляем обработчиком прокрутки отдельно
     useEffect(() => {
