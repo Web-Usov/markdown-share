@@ -82,7 +82,7 @@ export const Toolbar = () => {
         Поделиться
       </button>
       <button
-        className="btn btn-ghost m-1"
+        className="btn btn-secondary m-1"
         onClick={handleClear}
         disabled={!content}
       >

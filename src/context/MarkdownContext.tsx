@@ -5,7 +5,12 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { compressText, decompressText, createShareableUrl } from "../utils";
+import {
+  compressText,
+  decompressText,
+  createShareableUrl,
+  useCachedState,
+} from "../utils";
 
 interface MarkdownContextType {
   content: string;
@@ -24,7 +29,7 @@ interface MarkdownProviderProps {
 }
 
 export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useCachedState<string>("markdown:content", "");
   const [shareableUrl, setShareableUrl] = useState("");
   const [userIp, setUserIp] = useState("");
 
@@ -32,11 +37,11 @@ export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
   useEffect(() => {
     const fetchUserIp = async () => {
       try {
-        const response = await fetch('https://api.ipify.org?format=json');
+        const response = await fetch("https://api.ipify.org?format=json");
         const data = await response.json();
         setUserIp(data.ip);
       } catch (error) {
-        console.error('Failed to fetch user IP:', error);
+        console.error("Failed to fetch user IP:", error);
       }
     };
     fetchUserIp();
@@ -66,33 +71,38 @@ export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
       const compressed = compressText(content);
       window.history.replaceState(null, "", `#${compressed}`);
       setShareableUrl(createShareableUrl(content));
+    } else {
+      window.history.replaceState(null, "", window.location.pathname);
     }
   }, [content]);
 
   // Функция для создания короткой ссылки через shlink.io
   const createShortUrl = async (): Promise<string> => {
     try {
-      const response = await fetch('https://shlink.usov-home.ru/rest/v2/short-urls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': import.meta.env.VITE_SHLINK_API_KEY || '',
-        },
-        body: JSON.stringify({
-          longUrl: shareableUrl,
-          tags: ['md-share', `ip-${userIp}`],
-          findIfExists: true
-        })
-      });
+      const response = await fetch(
+        "https://shlink.usov-home.ru/rest/v2/short-urls",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": import.meta.env.VITE_SHLINK_API_KEY || "",
+          },
+          body: JSON.stringify({
+            longUrl: shareableUrl,
+            tags: ["md-share", `ip-${userIp}`],
+            findIfExists: true,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to create short URL');
+        throw new Error("Failed to create short URL");
       }
 
       const data = await response.json();
       return data.shortUrl;
     } catch (error) {
-      console.error('Error creating short URL:', error);
+      console.error("Error creating short URL:", error);
       return shareableUrl; // возвращаем оригинальную ссылку в случае ошибки
     }
   };

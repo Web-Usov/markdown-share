@@ -3,9 +3,10 @@ import { MarkdownProvider, useMarkdown } from "./context/MarkdownContext";
 import { MarkdownEditor } from "./components/MarkdownEditor";
 import { CodeEditor } from "./components/CodeEditor/CodeEditor";
 import { Toolbar } from "./components/Toolbar";
-import Split from "react-split";
 import { useRef, useCallback, useEffect } from "react";
 import { calculateScrollPercentage, setScrollPercentage } from "./utils";
+import { Splitter } from "./components/Splitter/Splitter";
+import logo from "./assets/logo.svg";
 
 function AppContent() {
   const { content, setContent } = useMarkdown();
@@ -68,45 +69,33 @@ function AppContent() {
   );
 
   return (
-    <div className="min-h-screen bg-base-100 text-base-content flex flex-col h-screen">
-      <div className="navbar bg-base-200 ">
-        <div className="flex-1">
-          <span className="text-xl font-bold">Markdown Share</span>
+    <div className="  bg-base-100 text-base-content flex flex-col h-screen">
+      <div className="navbar bg-base-200  p-4">
+        <div className="flex-1 flex items-center gap-4">
+          {/* <img src="/favicon.svg" alt="Markdown Share" className="h-12 w-12" /> */}
+          <img src={logo} alt="Markdown Share" className="h-12 w-12" />
+
+          <span className="text-4xl font-bold text-primary">
+            Markdown Share
+          </span>
         </div>
         <Toolbar />
       </div>
-      <div className="flex-1 overflow-hidden">
-        <Split
-          sizes={[50, 50]}
-          minSize={100}
-          expandToMin={false}
-          gutterSize={10}
-          gutterAlign="center"
-          snapOffset={30}
-          dragInterval={1}
-          direction={"horizontal"}
-          cursor={"col-resize"}
-          className={`split h-full split-horizontal`}
-        >
-          <div className="h-full overflow-auto">
-            <CodeEditor
-              value={content}
-              onChange={setContent}
-              className="h-full"
-              ref={codeEditorRef}
-              onScroll={handleCodeEditorScroll}
-            />
-          </div>
-          <div className="h-full overflow-auto">
-            <MarkdownEditor
-              content={content}
-              className="h-full"
-              ref={markdownRef}
-              onScroll={handleMarkdownScroll}
-            />
-          </div>
-        </Split>
-      </div>
+      <Splitter>
+        <CodeEditor
+          value={content}
+          onChange={setContent}
+          className="h-full w-full"
+          ref={codeEditorRef}
+          onScroll={handleCodeEditorScroll}
+        />
+        <MarkdownEditor
+          content={content}
+          className="h-full w-full"
+          ref={markdownRef}
+          onScroll={handleMarkdownScroll}
+        />
+      </Splitter>
     </div>
   );
 }
