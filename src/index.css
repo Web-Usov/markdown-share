@@ -1,5 +1,9 @@
 @import "tailwindcss";
-@plugin "daisyui";
+
+@plugin "daisyui" {
+  exclude: rootscrollgutter;
+}
+
 @plugin "@tailwindcss/typography";
 
 /* Дополнительные стили для markdown */

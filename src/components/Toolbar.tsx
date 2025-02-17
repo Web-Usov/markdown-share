@@ -1,10 +1,15 @@
 import { useMarkdown } from "../context/MarkdownContext";
 import { useTheme } from "../context/ThemeContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { MdShare, MdDelete } from "react-icons/md";
+import { Modal } from "./Modal";
 
 export const Toolbar = () => {
   const { content, setContent, createShortUrl } = useMarkdown();
   const { theme, setTheme, asSelectedTheme } = useTheme();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     const handleThemeChange = () => {
@@ -23,17 +28,25 @@ export const Toolbar = () => {
     try {
       const shortUrl = await createShortUrl();
       await navigator.clipboard.writeText(shortUrl);
-      alert("Ссылка скопирована в буфер обмена!");
+      setModalMessage("Ссылка скопирована в буфер обмена!");
+      setModalOpen(true);
     } catch (error) {
       console.error("Failed to share:", error);
-      alert("Не удалось создать ссылку");
+      setModalMessage("Не удалось создать ссылку");
+      setModalOpen(true);
     }
   };
 
   const handleClear = () => {
-    if (window.confirm("Вы уверены, что хотите очистить редактор?")) {
-      setContent("");
-    }
+    setModalMessage("Вы уверены, что хотите очистить редактор?");
+    setShowClearConfirm(true);
+    setModalOpen(true);
+  };
+
+  const handleConfirmClear = () => {
+    setContent("");
+    setModalOpen(false);
+    setShowClearConfirm(false);
   };
 
   return (
@@ -78,16 +91,35 @@ export const Toolbar = () => {
         className="btn btn-primary m-1"
         onClick={handleShare}
         disabled={!content}
+        title="Поделиться"
       >
-        Поделиться
+        <span className="hidden sm:inline">Поделиться</span>
+        <span className="sm:hidden">
+          <MdShare size={20} />
+        </span>
       </button>
       <button
         className="btn btn-secondary m-1"
         onClick={handleClear}
         disabled={!content}
+        title="Очистить"
       >
-        Очистить
+        <span className="hidden sm:inline">Очистить</span>
+        <span className="sm:hidden">
+          <MdDelete size={20} />
+        </span>
       </button>
+      <Modal 
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          if (showClearConfirm) {
+            setShowClearConfirm(false);
+          }
+        }}
+        message={modalMessage}
+        confirmAction={showClearConfirm ? handleConfirmClear : undefined}
+      />
     </div>
   );
 };
