@@ -1,7 +1,7 @@
 import { useMarkdown } from "../context/MarkdownContext";
 import { useTheme } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
-import { MdShare, MdDelete } from "react-icons/md";
+import { MdShare, MdDelete, MdDownload } from "react-icons/md";
 import { Modal } from "./Modal";
 
 export const Toolbar = () => {
@@ -10,6 +10,8 @@ export const Toolbar = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     const handleThemeChange = () => {
@@ -47,6 +49,80 @@ export const Toolbar = () => {
     setContent("");
     setModalOpen(false);
     setShowClearConfirm(false);
+  };
+
+  const getDefaultFileName = () => {
+    if (!content) return "document";
+
+    // Берем первую строку
+    const firstLine = content.split("\n")[0].trim();
+    if (!firstLine) return "document";
+
+    // Транслитерация кириллицы
+    const translit: Record<string, string> = {
+      а: "a",
+      б: "b",
+      в: "v",
+      г: "g",
+      д: "d",
+      е: "e",
+      ё: "yo",
+      ж: "zh",
+      з: "z",
+      и: "i",
+      й: "y",
+      к: "k",
+      л: "l",
+      м: "m",
+      н: "n",
+      о: "o",
+      п: "p",
+      р: "r",
+      с: "s",
+      т: "t",
+      у: "u",
+      ф: "f",
+      х: "h",
+      ц: "ts",
+      ч: "ch",
+      ш: "sh",
+      щ: "sch",
+      ъ: "",
+      ы: "y",
+      ь: "",
+      э: "e",
+      ю: "yu",
+      я: "ya",
+    };
+
+    const result = firstLine
+      .toLowerCase()
+      .split("")
+      .map((char) => translit[char] || char)
+      .join("")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    return result || "document";
+  };
+
+  const handleDownloadClick = () => {
+    const defaultName = getDefaultFileName() + ".md";
+    setFileName(defaultName);
+    setShowDownloadModal(true);
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowDownloadModal(false);
   };
 
   return (
@@ -93,10 +169,7 @@ export const Toolbar = () => {
         disabled={!content}
         title="Поделиться"
       >
-        <span className="hidden sm:inline">Поделиться</span>
-        <span className="sm:hidden">
-          <MdShare size={20} />
-        </span>
+        <MdShare size={20} />
       </button>
       <button
         className="btn btn-secondary m-1"
@@ -104,12 +177,17 @@ export const Toolbar = () => {
         disabled={!content}
         title="Очистить"
       >
-        <span className="hidden sm:inline">Очистить</span>
-        <span className="sm:hidden">
-          <MdDelete size={20} />
-        </span>
+        <MdDelete size={20} />
       </button>
-      <Modal 
+      <button
+        className="btn btn-accent m-1"
+        onClick={handleDownloadClick}
+        disabled={!content}
+        title="Скачать"
+      >
+        <MdDownload size={20} />
+      </button>
+      <Modal
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
@@ -119,6 +197,23 @@ export const Toolbar = () => {
         }}
         message={modalMessage}
         confirmAction={showClearConfirm ? handleConfirmClear : undefined}
+      />
+      <Modal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        message={
+          <div className="flex flex-col gap-2 ">
+            <span>Название файла:</span>
+            <input
+              type="text"
+              className="input input-bordered w-full"
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+            />
+          </div>
+        }
+        confirmAction={handleDownload}
+        confirmText="Скачать"
       />
     </div>
   );

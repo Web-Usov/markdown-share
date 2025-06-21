@@ -3,8 +3,9 @@ import React, { useEffect, useRef } from "react";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  message: string;
+  message: React.ReactNode;
   confirmAction?: () => void;
+  confirmText?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -27,13 +28,9 @@ export const Modal: React.FC<ModalProps> = ({
   }, [isOpen]);
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="modal"
-      onClose={onClose}
-    >
+    <dialog ref={dialogRef} className="modal" onClose={onClose}>
       <div className="modal-box">
-        <p className="py-4 text-center">{message}</p>
+        <div className="py-4 text-center">{message}</div>
         <div className="modal-action justify-center">
           {confirmAction ? (
             <>

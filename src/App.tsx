@@ -70,12 +70,11 @@ function AppContent() {
 
   return (
     <div className="  bg-base-100 text-base-content flex flex-col h-screen">
-      <div className="navbar bg-base-200  p-4">
+      <div className="navbar bg-base-200 p-4">
         <div className="flex-1 flex items-center gap-4">
-          {/* <img src="/favicon.svg" alt="Markdown Share" className="h-12 w-12" /> */}
           <img src={logo} alt="Markdown Share" className="h-12 w-12" />
 
-          <span className="text-4xl font-bold text-primary">
+          <span className="text-4xl font-bold text-primary hidden md:block">
             Markdown Share
           </span>
         </div>
