@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/react";
+
 import {
   createContext,
   useContext,
@@ -42,6 +44,9 @@ export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
         setUserIp(data.ip);
       } catch (error) {
         console.error("Failed to fetch user IP:", error);
+        Sentry.captureException(error, {
+          tags: { feature: "fetch-user-ip" },
+        });
       }
     };
     fetchUserIp();
@@ -61,6 +66,10 @@ export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
         }
       } catch (e) {
         console.error("Failed to decompress URL data:", e);
+        Sentry.captureException(e, {
+          tags: { feature: "decompress-url" },
+          extra: { hash },
+        });
       }
     }
   }, []);
@@ -103,6 +112,10 @@ export const MarkdownProvider = ({ children }: MarkdownProviderProps) => {
       return data.shortUrl;
     } catch (error) {
       console.error("Error creating short URL:", error);
+      Sentry.captureException(error, {
+        tags: { feature: "MarkdownProvider:create-short-url" },
+        extra: { shareableUrl, userIp },
+      });
       return shareableUrl; // возвращаем оригинальную ссылку в случае ошибки
     }
   };

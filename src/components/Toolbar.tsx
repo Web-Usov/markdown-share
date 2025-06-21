@@ -1,11 +1,12 @@
 import { useMarkdown } from "../context/MarkdownContext";
 import { useTheme } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
-import { MdShare, MdDelete, MdDownload } from "react-icons/md";
+import { MdShare, MdDelete, MdDownload, MdError } from "react-icons/md";
 import { Modal } from "./Modal";
+import * as Sentry from "@sentry/react";
 
 export const Toolbar = () => {
-  const { content, setContent, createShortUrl } = useMarkdown();
+  const { content, setContent, createShortUrl, userIp } = useMarkdown();
   const { theme, setTheme, asSelectedTheme } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -27,8 +28,9 @@ export const Toolbar = () => {
   }, [theme]);
 
   const handleShare = async () => {
+    let shortUrl = "";
     try {
-      const shortUrl = await createShortUrl();
+      shortUrl = await createShortUrl();
       await navigator.clipboard.writeText(shortUrl);
       setModalMessage("Ссылка скопирована в буфер обмена!");
       setModalOpen(true);
@@ -36,6 +38,11 @@ export const Toolbar = () => {
       console.error("Failed to share:", error);
       setModalMessage("Не удалось создать ссылку");
       setModalOpen(true);
+
+      Sentry.captureException(error, {
+        tags: { feature: "handleShare:create-short-url" },
+        extra: { shortUrl, userIp },
+      });
     }
   };
 
@@ -187,6 +194,17 @@ export const Toolbar = () => {
       >
         <MdDownload size={20} />
       </button>
+      {import.meta.env.DEV && (
+        <button
+          className="btn btn-error m-1"
+          onClick={() => {
+            throw new Error("test error");
+          }}
+          disabled={!content}
+        >
+          <MdError size={20} />
+        </button>
+      )}
       <Modal
         isOpen={modalOpen}
         onClose={() => {
