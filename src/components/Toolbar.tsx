@@ -9,7 +9,7 @@ export const Toolbar = () => {
   const { content, setContent, createShortUrl, userIp } = useMarkdown();
   const { theme, setTheme, asSelectedTheme } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
+  const [modalMessage, setModalMessage] = useState<React.ReactNode>("");
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -31,8 +31,32 @@ export const Toolbar = () => {
     let shortUrl = "";
     try {
       shortUrl = await createShortUrl();
-      await navigator.clipboard.writeText(shortUrl);
-      setModalMessage("Ссылка скопирована в буфер обмена!");
+      try {
+        await navigator.clipboard.writeText(shortUrl);
+        setModalMessage("Ссылка скопирована в буфер обмена!");
+      } catch (error) {
+        console.error("Failed to copy to clipboard:", error);
+
+        const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+        const copyHotkey = isMac ? "⌘C" : "CTRL+C";
+        setModalMessage(
+          <div className="flex flex-col gap-6 ">
+            <span>
+              Скопируйте ссылку <code className=" font-mono">{copyHotkey}</code>
+            </span>
+            <input
+              readOnly
+              type="text"
+              className="input input-bordered w-full"
+              value={shortUrl}
+              onFocus={(e) => {
+                e.target.select();
+              }}
+            />
+          </div>
+        );
+      }
+
       setModalOpen(true);
     } catch (error) {
       console.error("Failed to share:", error);
