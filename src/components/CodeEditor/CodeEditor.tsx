@@ -95,10 +95,6 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       const scroller = wrapperRef.current.querySelector(".cm-scroller");
       if (!scroller) return;
 
-      console.debug("CodeEditor: Setting up scroll listener", {
-        hasScroller: true,
-      });
-
       // Удаляем предыдущий обработчик, если он есть
       if (scrollListenerRef.current) {
         scroller.removeEventListener("scroll", scrollListenerRef.current);
@@ -108,9 +104,6 @@ export const CodeEditor = forwardRef<HTMLDivElement, CodeEditorProps>(
       scroller.addEventListener("scroll", onScroll);
 
       return () => {
-        console.debug("CodeEditor: Cleaning up scroll listener", {
-          hasScroller: true,
-        });
         if (scrollListenerRef.current) {
           scroller.removeEventListener("scroll", scrollListenerRef.current);
           scrollListenerRef.current = null;

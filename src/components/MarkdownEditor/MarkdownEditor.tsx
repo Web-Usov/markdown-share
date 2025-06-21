@@ -12,10 +12,8 @@ export const MarkdownEditor = forwardRef<HTMLDivElement, MarkdownEditorProps>(
 
     useEffect(() => {
       if (wrapperRef.current && onScroll) {
-        console.debug("MarkdownEditor: Adding scroll listener");
         wrapperRef.current.addEventListener("scroll", onScroll);
         return () => {
-          console.debug("MarkdownEditor: Removing scroll listener");
           wrapperRef.current?.removeEventListener("scroll", onScroll);
         };
       }
